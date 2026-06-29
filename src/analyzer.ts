@@ -1,4 +1,5 @@
 import type { Jwt, JwtPayload } from 'jsonwebtoken';
+import chalk from 'chalk';
 
 export type Severity = 'critical' | 'warning' | 'info';
 
@@ -57,4 +58,23 @@ export function analyzeJwt(decoded: Jwt): Analysis {
     score: Math.max(0, score),
     findings,
   };
+}
+
+export function generateConsoleReport(decoded: Jwt, analysis: Analysis): string {
+  const { header, payload } = decoded;
+  let output = chalk.bold.blue('\n--- JWT Analysis Report ---\n\n');
+  output += chalk.bold.green('Header:\n') + JSON.stringify(header, null, 2) + '\n\n';
+  output += chalk.bold.green('Payload:\n') + JSON.stringify(payload, null, 2) + '\n\n';
+  output += chalk.bold.yellow('Security Analysis:\n');
+  output += `Score: ${analysis.score}/100\n\n`;
+  if (analysis.findings.length > 0) {
+    output += chalk.bold('Findings:\n');
+    analysis.findings.forEach(f => {
+      const color = f.severity === 'critical' ? 'red' : f.severity === 'warning' ? 'yellow' : 'cyan';
+      output += chalk[color](`[${f.severity.toUpperCase()}] ${f.category}: ${f.message}\n`);
+    });
+  } else {
+    output += chalk.green('No issues found!\n');
+  }
+  return output;
 }

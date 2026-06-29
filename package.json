@@ -2,20 +2,21 @@
   "name": "jwt-tool",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "bin": {
-    "jwt-tool": "dist/index.js"
+    "jwt-tool": "dist/index.cjs"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup src/index.ts --format cjs --outDir dist --minify --clean",
+    "test": "vitest",
+    "start": "node dist/index.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "chalk": "^4.1.2",
     "commander": "^15.0.0",
     "jsonwebtoken": "^9.0.3"
   },
@@ -24,6 +25,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
