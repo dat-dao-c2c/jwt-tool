@@ -1,7 +1,7 @@
 {
   "name": "jwt-tool",
   "version": "1.0.0",
-  "description": "",
+  "description": "A powerful CLI tool to decode, analyze, security-score, and brute-force crack HS256 JSON Web Tokens (JWTs).",
   "main": "dist/index.cjs",
   "bin": {
     "jwt-tool": "dist/index.cjs"
@@ -11,7 +11,15 @@
     "test": "vitest",
     "start": "node dist/index.cjs"
   },
-  "keywords": [],
+  "keywords": [
+    "jwt",
+    "security",
+    "cli",
+    "authentication",
+    "brute-force",
+    "token-analysis",
+    "infosec"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",
