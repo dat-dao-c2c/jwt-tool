@@ -7,6 +7,8 @@ A CLI tool to decode, analyze, and crack HS256 JSON Web Tokens (JWTs).
 - **Decode**: Decode JWTs and view header, payload, and signature.
 - **Analyze**: Perform security analysis on tokens (checks algorithm strength, missing claims like `exp`, `iat`, `jti`).
 - **Crack**: Brute-force HS256 JWT secrets using a wordlist.
+- **Verify**: Validate JWT signatures using a secret or public key.
+- **Generate**: Create new JWTs with custom payloads and algorithms.
 
 ## Installation
 
@@ -51,14 +53,25 @@ Brute-force an HS256 secret using a wordlist file.
 ```bash
 # First, fetch a wordlist (e.g., from wallarm/jwt-secrets)
 curl -L https://raw.githubusercontent.com/wallarm/jwt-secrets/master/jwt.secrets.list -o jwt.secrets.list
-# https://raw.githubusercontent.com/berzerk0/Probable-Wordlists/refs/heads/master/Real-Passwords/Top304Thousand-probable-v2.txt
 
 # Run the crack command
 jwt-tool crack <token> jwt.secrets.list
 ```
 # Result: Output showing the found secret or a failure message.
 
-### 5. Generate a Strong Secret
+### 5. Verify a JWT
+```bash
+jwt-tool verify <token> <secret>
+# Result: A JSON object indicating validity (true/false) and the payload or error message.
+```
+
+### 6. Generate a JWT
+```bash
+jwt-tool generate '{"sub": "123"}' 'my-secret' --alg HS256
+# Result: The generated JWT string.
+```
+
+### 7. Generate a Strong Secret
 Generate a cryptographically strong random secret key.
 
 ```bash
@@ -66,7 +79,7 @@ jwt-tool generate-secret --length 32
 # Result: A secure random string.
 ```
 
-### 6. Evaluate Secret Strength
+### 8. Evaluate Secret Strength
 Assess the strength of a secret key based on length and complexity.
 
 ```bash
@@ -115,11 +128,11 @@ To achieve the highest security score, aim for tokens that include:
 
 - **Strong Algorithm**: Use asymmetric algorithms like `RS256` (RSA) or `ES256` (ECDSA) instead of symmetric ones (`HS256`).
 - **Mandatory Claims**:
-  - `exp`: Defines when the token expires (essential to limit window of misuse).
-  - `iat`: Helps track when the token was issued.
-  - `jti`: A unique identifier for the token (crucial for detecting and preventing replay attacks).
-  - `iss`: Identifies the issuer of the token.
-  - `aud`: Specifies the intended audience for the token.
+  - **`exp` (Expiration Time):** Prevents indefinite token validity. Essential for limiting the impact of a compromised token by ensuring it becomes unusable after a defined period.
+  - **`iat` (Issued At):** Establishes the token's creation time. Used to implement "time-of-issuance" validation, allowing servers to reject tokens issued before a specific timestamp (e.g., to revoke access after a password reset).
+  - **`jti` (JWT ID):** Provides a unique ID to prevent replay attacks. Allows servers to implement a "blacklist" or "used-tokens" cache to ensure a single-use token cannot be re-submitted.
+  - **`iss` (Issuer):** Validates the trusted source. Enables the service to verify that the token was signed by the expected authentication provider.
+  - **`aud` (Audience):** Ensures the token is used only for authorized services. Prevents a token issued for one service from being maliciously re-used to authenticate against a more sensitive or different microservice.
 
 ### Best Practice Example (Payload)
 

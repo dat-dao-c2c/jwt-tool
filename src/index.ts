@@ -9,7 +9,7 @@ const program = new Command();
 
 program
   .name('jwt-tool')
-  .description('A CLI tool to decode and inspect JWTs')
+  .description('A CLI tool to decode, analyze, and crack HS256 JSON Web Tokens (JWTs).')
   .version('1.0.0');
 
 program
@@ -57,6 +57,38 @@ program
       const analysis = analyzeJwt(decoded as Jwt);
       
       console.log(JSON.stringify(analysis, null, 2));
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('verify')
+  .description('Verify a JWT signature')
+  .argument('<token>', 'The JWT to verify')
+  .argument('<secret>', 'The secret or public key')
+  .action((token: string, secret: string) => {
+    try {
+      const decoded = jwt.verify(token, secret);
+      console.log(JSON.stringify({ valid: true, payload: decoded }, null, 2));
+    } catch (err: any) {
+      console.log(JSON.stringify({ valid: false, error: err.message }, null, 2));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('generate')
+  .description('Generate a new JWT')
+  .argument('<payloadJSON>', 'JSON string for payload')
+  .argument('<secret>', 'Secret to sign with')
+  .option('-a, --alg <alg>', 'Algorithm (e.g., HS256, RS256)', 'HS256')
+  .action((payloadJSON: string, secret: string, options: { alg: string }) => {
+    try {
+      const payload = JSON.parse(payloadJSON);
+      const token = jwt.sign(payload, secret, { algorithm: options.alg as any });
+      console.log(token);
     } catch (err: any) {
       console.error('Error:', err.message);
       process.exit(1);
