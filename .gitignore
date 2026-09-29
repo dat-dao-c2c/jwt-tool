@@ -3,3 +3,7 @@ dist
 .env
 .DS_Store
 *.log
+
+# Large / generated wordlists (fetch or generate locally; see README)
+jwt.audit.500k.list
+jwt.audit.generated.list

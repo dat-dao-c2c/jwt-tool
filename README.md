@@ -45,6 +45,19 @@ jwt-tool decode <token> --report
 ```bash
 jwt-tool analyze <token>
 # Result: A concise JSON object containing security score and specific findings.
+
+# Fail a CI job when a finding at or above a severity is present:
+jwt-tool analyze <token> --fail-on critical
+# Exit codes: 0 = clean / below threshold, 2 = threshold met, 1 = usage/decode error.
+```
+
+The analyzer checks the algorithm (`none`/`crit`), expiry (`exp`), not-before
+(`nbf`), and the presence of `iat`, `jti`, `iss`, and `aud`.
+
+Tokens can be passed inline, from a file with `@path`, or from stdin with `-`:
+```bash
+echo "$TOKEN" | jwt-tool analyze -
+jwt-tool decode @token.txt --report
 ```
 
 ### 4. Crack a JWT
@@ -63,11 +76,19 @@ jwt-tool crack <token> jwt.secrets.list
 ```bash
 jwt-tool verify <token> <secret>
 # Result: A JSON object indicating validity (true/false) and the payload or error message.
+
+# Verify against an asymmetric public key and pin the accepted algorithm(s):
+jwt-tool verify <token> --key-file public.pem --alg RS256
 ```
+> Algorithms are pinned to the token's `alg` by default (or to `--alg`) to
+> prevent algorithm-confusion attacks.
 
 ### 6. Generate a JWT
 ```bash
 jwt-tool generate '{"sub": "123"}' 'my-secret' --alg HS256
+
+# Set an expiry and/or sign with a private key file:
+jwt-tool generate '{"sub":"123"}' --key-file private.pem --alg RS256 --expires-in 1h
 # Result: The generated JWT string.
 ```
 
@@ -80,11 +101,12 @@ jwt-tool generate-secret --length 32
 ```
 
 ### 8. Evaluate Secret Strength
-Assess the strength of a secret key based on length and complexity.
+Assess the strength of a secret key based on estimated entropy (length × charset),
+where 128 bits maps to a full score.
 
 ```bash
 jwt-tool evaluate-secret <secret>
-# Result: A score (0-100) and feedback on how to improve the secret's strength.
+# Result: A score (0-100), an entropy estimate, and feedback for improvement.
 ```
 
 For more hands-on practice, see `examples/commands.sh`.
