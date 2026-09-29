@@ -6,10 +6,18 @@
   "bin": {
     "jwt-tool": "dist/index.cjs"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest",
-    "start": "node dist/index.cjs"
+    "start": "node dist/index.cjs",
+    "prepublishOnly": "npm run build && npm test -- --run"
   },
   "keywords": [
     "jwt",
