@@ -1,6 +1,7 @@
 import jwt, { type Algorithm } from 'jsonwebtoken';
 import fs from 'fs';
 import readline from 'readline';
+import { Readable } from 'stream';
 
 const HMAC_ALGS: Algorithm[] = ['HS256', 'HS384', 'HS512'];
 
@@ -23,9 +24,48 @@ export function getTokenAlgorithm(token: string): string | undefined {
   return decoded.header.alg;
 }
 
+interface WordlistStream {
+  stream: NodeJS.ReadableStream;
+  /** Whether crackJwt owns the stream and should destroy it when done. */
+  cleanup: () => void;
+}
+
+/**
+ * Open a wordlist from a file path, an http(s) URL, or "-" (stdin).
+ * Returns the readable stream plus a cleanup function.
+ */
+async function openWordlist(source: string): Promise<WordlistStream> {
+  if (source === '-') {
+    // Do not destroy the shared process.stdin; readline closing is enough.
+    return { stream: process.stdin, cleanup: () => {} };
+  }
+
+  if (/^https?:\/\//i.test(source)) {
+    const res = await fetch(source);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch wordlist: HTTP ${res.status} ${res.statusText}`);
+    }
+    if (!res.body) {
+      throw new Error('Failed to fetch wordlist: empty response body');
+    }
+    const stream = Readable.fromWeb(res.body as any);
+    return { stream, cleanup: () => stream.destroy() };
+  }
+
+  if (!fs.existsSync(source)) {
+    throw new Error(`Wordlist file not found: ${source}`);
+  }
+  const stream = fs.createReadStream(source);
+  return { stream, cleanup: () => stream.destroy() };
+}
+
+/**
+ * Brute-force an HMAC JWT secret against a wordlist.
+ * @param source A file path, an http(s):// URL, or "-" for stdin.
+ */
 export async function crackJwt(
   token: string,
-  wordlistPath: string,
+  source: string,
   options: CrackOptions = {}
 ): Promise<CrackResult> {
   const alg = getTokenAlgorithm(token);
@@ -36,15 +76,11 @@ export async function crackJwt(
     );
   }
 
-  if (!fs.existsSync(wordlistPath)) {
-    throw new Error(`Wordlist file not found: ${wordlistPath}`);
-  }
-
   const algorithms = [alg as Algorithm];
   const progressInterval = options.progressInterval ?? 50_000;
 
-  const fileStream = fs.createReadStream(wordlistPath);
-  const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+  const { stream, cleanup } = await openWordlist(source);
+  const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
   let attempts = 0;
   try {
@@ -63,7 +99,7 @@ export async function crackJwt(
     }
   } finally {
     rl.close();
-    fileStream.destroy();
+    cleanup();
   }
 
   return { secret: null, attempts };

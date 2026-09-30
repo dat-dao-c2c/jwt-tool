@@ -158,7 +158,7 @@ program
   .command('crack')
   .description('Brute-force HS256 JWT secret using a wordlist')
   .argument('<token>', 'The JWT to crack (or "@file" / "-" for stdin)')
-  .argument('<wordlist>', 'Path to the wordlist file')
+  .argument('<wordlist>', 'Wordlist source: a file path, an http(s):// URL, or "-" for stdin')
   .action(async (token: string, wordlist: string) => {
     try {
       const resolvedToken = resolveInput(token);

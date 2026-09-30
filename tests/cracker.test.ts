@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -52,5 +52,28 @@ describe('crackJwt', () => {
   it('errors on a missing wordlist file', async () => {
     const token = jwt.sign({ sub: '1' }, 's', { algorithm: 'HS256' });
     await expect(crackJwt(token, '/no/such/file.list')).rejects.toThrow(/not found/);
+  });
+
+  it('streams a wordlist from an http(s) URL', async () => {
+    const token = jwt.sign({ sub: '1' }, 'fromurl', { algorithm: 'HS256' });
+    const fetchMock = vi.fn(async () => new Response('nope\nfromurl\nother\n', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      const result = await crackJwt(token, 'https://example.com/jwt.secrets.list');
+      expect(result.secret).toBe('fromurl');
+      expect(fetchMock).toHaveBeenCalledWith('https://example.com/jwt.secrets.list');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('errors on a non-2xx URL response', async () => {
+    const token = jwt.sign({ sub: '1' }, 's', { algorithm: 'HS256' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 404, statusText: 'Not Found' })));
+    try {
+      await expect(crackJwt(token, 'https://example.com/missing.list')).rejects.toThrow(/HTTP 404/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
