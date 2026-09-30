@@ -1,6 +1,9 @@
 {
-  "name": "jwt-tool",
+  "name": "@datdm198x/jwt-tool",
   "version": "1.0.4",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "A powerful CLI tool to decode, analyze, security-score, and brute-force crack HS256 JSON Web Tokens (JWTs).",
   "main": "dist/index.cjs",
   "bin": {
