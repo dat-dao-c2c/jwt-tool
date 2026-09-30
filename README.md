@@ -12,6 +12,17 @@ A CLI tool to decode, analyze, and crack HS256 JSON Web Tokens (JWTs).
 
 ## Installation
 
+Install globally from npm (provides the `jwt-tool` command):
+```bash
+npm install -g @datdm198x/jwt-tool
+```
+
+Or run it without installing:
+```bash
+npx @datdm198x/jwt-tool decode <token>
+```
+
+### From source (development)
 ```bash
 npm install
 npm run build
@@ -19,11 +30,6 @@ npm run build
 npm link
 ```
 After running `npm link`, you can run `jwt-tool` from anywhere in your terminal.
-
-Alternatively, you can install it directly from the registry once published:
-```bash
-npm install -g jwt-tool
-```
 
 ## Usage
 
